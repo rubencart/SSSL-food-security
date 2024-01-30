@@ -1,6 +1,9 @@
-# SSSL-food-security
-Code and data export scripts accompanying our article 
-"[Spatiotemporal self-supervised pre-training on satellite imagery improves food insecurity prediction](https://www.cambridge.org/core/journals/environmental-data-science/article/spatiotemporal-selfsupervised-pretraining-on-satellite-imagery-improves-food-insecurity-prediction/47FDCFF96FF9A99D31548C1539D506A5)".
+# Spatiotemporal self-supervised pre-training on satellite imagery improves food insecurity prediction
+
+Code and data export scripts accompanying our [article](https://www.cambridge.org/core/journals/environmental-data-science/article/spatiotemporal-selfsupervised-pretraining-on-satellite-imagery-improves-food-insecurity-prediction/47FDCFF96FF9A99D31548C1539D506A5), published in Environmental Data Science.
+
+We used code from Patacchiola's Relational Reasoning [repository](https://github.com/mpatacchiola/self-supervised-relational-reasoning).
+
 ## Set up
 
 Dependencies
@@ -14,7 +17,8 @@ Dependencies
 - wandb
 - h5py
 - scikit-learn
-- matplotlib 
+- matplotlib
+- shap
 
 ```
 conda create -n ssslenv python=3.10 ipython
@@ -23,7 +27,7 @@ conda install pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 pytorch-cud
 conda install -c conda-forge rasterio=1.3.0.post1 gdal=3.5.1 poppler=22.04.0 pytorch-lightning=1.8.6
 # if error `ImportError: libLerc.so.4: cannot open shared object file: No such file or directory` when `import rasterio`:
 # conda install -c conda-forge lerc=4.0.0
-pip install geopandas tqdm wandb scikit-learn typed-argument-parser matplotlib seaborn
+pip install geopandas tqdm wandb scikit-learn typed-argument-parser matplotlib seaborn shap
 conda install h5py -c conda-forge
 # https://github.com/ContinuumIO/anaconda-issues/issues/10351
 # conda install "poppler<0.62"
@@ -117,3 +121,18 @@ CUDA_VISIBLE_DEVICES=0 python code/pretrain_then_finetune.py --cfg config/pretra
 - Run `scripts/results/seasonality_plots.py` to generate a plot like in Figure 8.
 - Run `scripts/results/less_data_future_plots.py` to generate plots like in Figure 6 and 7.
 - Run `scripts/results/deeplift_shap_plots.py` to generate SHAP value plots like in Figure 9.
+
+## Reference
+
+If you use our work, please cite:
+```
+@article{cartuyvels2023spatiotemporal,
+  title={Spatiotemporal self-supervised pre-training on satellite imagery improves food insecurity prediction},
+  author={Cartuyvels, Ruben and Fierens, Tom and Coppieters, Emiel and Moens, Marie-Francine and Sileo, Damien},
+  journal={Environmental Data Science},
+  volume={2},
+  pages={e48},
+  year={2023},
+  publisher={Cambridge University Press}
+}
+```
