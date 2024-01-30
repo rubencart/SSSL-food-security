@@ -41,7 +41,8 @@ pytorch                   1.13.0          py3.10_cuda11.7_cudnn8.5.0_0    pytorc
 pytorch-cuda              11.7                 h67b0de4_0    pytorch
 ```
 
-Finally (!) install the sssl package as module so the scripts can import it: run from this directory
+Finally (!) install the sssl package as module so the scripts can import it: 
+run from the repository root directory:
 ```
 pip install -e .
 ```
