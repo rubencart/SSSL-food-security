@@ -1,0 +1,32 @@
+
+pretrain_cfg: 'config/pretrain/relres_resnet18_ALL.yaml'
+pretrained_on: 'own'
+do_pretrain: True
+checkpoints: 'all'    # all, best, last
+best_model_path: ''
+
+downstream_cfg:
+  - 'config/ipc/frz_mlp_100.yaml'
+
+best_cfg:
+  - 'config/ipc/frz_mlp_100_bin.yaml'
+  - 'config/ipc/frz_mlp_70.yaml'
+  - 'config/ipc/frz_mlp_50.yaml'
+  - 'config/ipc/frz_mlp_20.yaml'
+  - 'config/ipc/frz_mlp_5.yaml'
+  - 'config/ipc/frz_mlp_1.yaml'
+  - 'config/ipc/ft_mlp_100.yaml'
+  - 'config/ipc/ft_mlp_100_bin.yaml'
+  - 'config/ipc/ft_mlp_70.yaml'
+  - 'config/ipc/ft_mlp_50.yaml'
+  - 'config/ipc/ft_mlp_20.yaml'
+  - 'config/ipc/ft_mlp_5.yaml'
+  - 'config/ipc/ft_mlp_1.yaml'
+  - 'config/ipc/ft_mlp_100_0fut_after202003.yaml'
+  - 'config/ipc/ft_mlp_100_1fut_after202003.yaml'
+  - 'config/ipc/ft_mlp_100_2fut_after202003.yaml'
+  - 'config/ipc/ft_mlp_100_3fut_after202003.yaml'
+  - 'config/ipc/frz_mlp_100_0fut_after202003.yaml'
+  - 'config/ipc/frz_mlp_100_1fut_after202003.yaml'
+  - 'config/ipc/frz_mlp_100_2fut_after202003.yaml'
+  - 'config/ipc/frz_mlp_100_3fut_after202003.yaml'

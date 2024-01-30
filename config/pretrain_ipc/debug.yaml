@@ -1,0 +1,17 @@
+
+pretrain_cfg: 'config/pretrain/debug.yaml'
+pretrained_dir: ''
+#pretrained_dir: '/path/to/SSSL/output/2000_00_00_00_00_00_debug_s42_test/'
+#do_pretrain: True
+do_pretrain: False
+best_model_path: '/path/to/SSSL/output/2000_00_00_00_00_00_s42_sssl_resnet18_t1_s04_ALL/checkpoints/epoch=6-step=99666.ckpt'
+#checkpoints: 'all'    # all, best, last
+checkpoints: 'best'    # all, best, last
+#pretrained_on: 'ImageNet'  # 'ImageNet', 'random'
+pretrained_on: 'own'
+
+downstream_cfg:
+  - 'config/ipc/debug.yaml'
+
+best_cfg:
+  - 'config/ipc/debug.yaml'

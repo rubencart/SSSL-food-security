@@ -1,0 +1,26 @@
+
+cfg_name: 'overfit'
+
+debug: True
+debug_num_workers: 10
+debug_max_epochs: 1000
+
+cnn_type: 'conv4'
+landsat8_bands: 'RGB'
+landsat8_normalize: True
+
+train:
+  accelerator: 'gpu'
+  overfit_batches: 20
+
+pretrain:
+  batch_size: 32
+  loss_type: 'sssl'
+  K: 2
+  lr: 0.0001
+  optimizer: 'sgd'
+  weight_decay: 0.0
+  lr_schedule_patience: 2000
+  early_stop_patience: 2000
+  time_pair_limit: 84
+  space_pair_limit: 0.05

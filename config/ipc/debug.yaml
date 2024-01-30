@@ -1,0 +1,39 @@
+
+cfg_name: debug_linear
+
+debug: True
+deterministic: False
+wandb_offline: True
+debug_num_workers: 10
+debug_max_epochs: 10
+
+do_test: False
+do_train: True
+
+cnn_type: 'resnet18'
+landsat8_bands: 'ALL'
+landsat8_normalize: True
+use_h5: True
+
+do_pretrain: False
+do_downstream: True
+downstr_splits_path: 'downstr_splits_incl_small.json'
+
+train:
+  accelerator: 'gpu'
+
+
+finetune:
+  freeze_backbone: True
+  batch_size: 2
+  val_batch_size: 2
+  lr: 0.0001
+  weight_decay: 0.01
+  pretrained_ckpt_path: 'output/2024_01_29_17_41_27_debug_s42_test/checkpoints/last.ckpt'
+  pretrained: True
+  pretrained_on: 'own'
+  all_backbone_ckpts_in_dir: ''
+  percentage_of_training_data: 100
+  binarize_ipc: False
+  n_steps_in_future: 0
+  temporally_separated: True
