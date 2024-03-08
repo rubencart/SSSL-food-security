@@ -231,6 +231,7 @@ if __name__ == "__main__":
     ipc_ds = IPCScoreDataset(cfg, "val")
     train_ipc_ds = IPCScoreDataset(cfg, "train")
 
+    # make sure to point to checkpoint that has been finetuned for IPC prediction
     p = "/path/to/s42_sssl_resnet18_t1_s04_ALL/checkpoints/<checkpoint>.ckpt"
     cfg.finetune.pretrained_on = "own"
     cfg.finetune.pretrained_ckpt_path = p
@@ -407,7 +408,7 @@ if __name__ == "__main__":
     first_per_class = np.array([0, 1, 2, 3]) * num_samples
     bands = utils.Constants.RGB_BANDS
     for i in tqdm(range(num_samples)):
-        for (band_names, shap_bands) in [
+        for band_names, shap_bands in [
             ("RGB", utils.Constants.RGB_BANDS),
             ("R-NIR-SWIR", [3, 4, 5]),
             ("B-SWIR12", [1, 5, 6]),

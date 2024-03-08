@@ -110,6 +110,33 @@ Pretrain then finetune:
 CUDA_VISIBLE_DEVICES=0 python code/pretrain_then_finetune.py --cfg config/pretrain_ipc/debug.yaml --seed 41
 ```
 
+### Checkpoints
+
+The file `checkpoints/sssl_resnet18_t1_s04_all_bands.zip` contains the best checkpoint of SSSL pretraining with temporal
+threshold set to 1 month and spatial threshold to 0.4 degrees. 
+```python
+from sssl.model.backbone_module import BackboneModule
+path = "checkpoints/sssl_resnet18_t1_s04_all_bands.zip"
+module = BackboneModule.load_from_checkpoint(path)
+# or
+from pytorch_lightning import Trainer
+module = BackboneModule(...)
+trainer = Trainer(...)
+trainer.predict(module, ckpt_path=path)
+```
+The file `checkpoints/ipc_finetuned_resnet18_t1_s04_all_bands.zip` contains the best checkpoint of IPC finetuning,
+started from weights initialized to the SSSL checkpoint above.  
+```python
+from sssl.model.ipc_module import IPCModule
+path = "checkpoints/ipc_finetuned_resnet18_t1_s04_all_bands.zip"
+module = IPCModule.load_from_checkpoint(path)
+# or
+from pytorch_lightning import Trainer
+module = IPCModule(...)
+trainer = Trainer(...)
+trainer.predict(module, ckpt_path=path)
+```
+
 ## Plots and results
 
 - Run the `limit_plot` function in `scripts/results/loss_and_threshold_plots.py` to generate plots like in Figure 5.
