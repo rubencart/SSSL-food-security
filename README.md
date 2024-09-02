@@ -80,7 +80,7 @@ If running on different country/region/timeframe than Somalia 2013-2020:
 if using different data than Somalia 2013-2020 and update in `utils.Constants`
 
 Tiles:
-- Download data from GEE with code in `scripts/earth_engine/js/export_somalia.js`
+- Export data from GEE with code in `scripts/earth_engine/js/export_somalia.js` (or contact me to find a way to transfer our data)
 - Download from google cloud to local server
 - Run `scripts/preprocess/build_indices.py`. The indices (and output of the next 2 steps)
 used for results in the publication are included in `data/indices.zip`. You can
