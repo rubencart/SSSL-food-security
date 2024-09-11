@@ -25,7 +25,8 @@ conda create -n ssslenv python=3.10 ipython
 conda activate ssslenv
 conda install pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 pytorch-cuda=11.7 -c pytorch -c nvidia
 conda install -c conda-forge rasterio=1.3.0.post1 gdal=3.5.1 poppler=22.04.0 pytorch-lightning=1.8.6
-# if error `ImportError: libLerc.so.4: cannot open shared object file: No such file or directory` when `import rasterio`:
+# try to run `python -c 'import rasterio'`
+# if error `ImportError: libLerc.so.4: cannot open shared object file: No such file or directory`:
 # conda install -c conda-forge lerc=4.0.0
 pip install geopandas tqdm wandb scikit-learn typed-argument-parser matplotlib seaborn shap
 conda install h5py -c conda-forge
