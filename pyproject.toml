@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools >= 64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+classifiers = ["License :: OSI Approved :: MIT License", "Programming Language :: Python"]
+license = {text = "MIT License"}
+name = "sssl"
+authors = [
+  {name = "Ruben Cartuyvels", email = "ruben.cartuyvels@gmail.com"},
+]
+readme = {file = "README.txt", content-type = "text/markdown"}
+requires-python = ">= 3.8"

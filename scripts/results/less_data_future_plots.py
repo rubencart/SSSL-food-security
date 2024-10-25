@@ -50,9 +50,7 @@ def data_plot(
         frz_groups = gdf.groupby(["finetune/freeze_backbone"], dropna=False)
 
         for frz, fdf in frz_groups:
-            fdf = fdf.sort_values(
-                "finetune/percentage_of_training_data", ascending=False
-            )
+            fdf = fdf.sort_values("finetune/percentage_of_training_data", ascending=False)
             print(fdf[["name", "finetune/percentage_of_training_data"]])
             style = "-" if (not frz or not frozen_dashed) else "--"
             fdf.plot(
@@ -76,9 +74,11 @@ def data_plot(
                 color=color,
                 linestyle="--" if pd.isna(rec["random_forest/class_weight"]) else "-",
                 marker=next(markers),
-                label="Random forest"
-                if pd.isna(rec["random_forest/class_weight"])
-                else "Random forest",
+                label=(
+                    "Random forest"
+                    if pd.isna(rec["random_forest/class_weight"])
+                    else "Random forest"
+                ),
             )
 
     if maj_baseline is not None:
@@ -192,7 +192,63 @@ def fut_plot(
     plt.close()
 
 
-def run():
+def run_data():
+    pd.set_option("display.max_rows", 500)
+    pd.set_option("display.max_columns", 500)
+    pd.set_option("display.width", 500)
+
+    df = utils.get_df_from_wandb()
+    run_df = preprocess_df(df)
+
+    groupby_cols = ["finetune/pretrained_on", "pretrain_relres", "pretrain_cfg_name"]
+    metrics = [
+        "test_id_maj_vote_f1_macro",
+        "test_ood_maj_vote_f1_macro",
+    ]
+    rf_metrics = [
+        "test_f1_macro",
+        "ood_f1_macro",
+    ]
+    rf_maj_baseline_metrics = [
+        "test_maj_baseline_f1_macro",
+        "ood_maj_baseline_f1_macro",
+    ]
+    dset_names = 2 * ["Test", "OOD"]
+    metric_names = [
+        "Macro F1",
+        "Macro F1",
+    ]
+    rf_run_names = [
+        "2023_02_10_16_02_59_random_forest_s42_bal",  # decreasing data
+        "2023_02_10_16_02_59_random_forest_s42_bal",  # decreasing data
+    ]
+
+    for metric, rf_metric, rf_mb_metric, dset_name, m_name in zip(
+        metrics, rf_metrics, rf_maj_baseline_metrics, dset_names, metric_names
+    ):
+        rf_df = df[df.name.str.contains(rf_run_names[-1])]
+        maj_bas_score, records = get_rf_data_df(rf_df, rf_mb_metric, rf_metric, rf_run_names)
+
+        fltrd_data_df = get_data_df(groupby_cols, metric, run_df)
+
+        for frz in (True, False):
+            data_plot(
+                fltrd_data_df[fltrd_data_df["finetune/freeze_backbone"] == frz],
+                groupby_cols,
+                f"Training set size vs {dset_name} {m_name} with"
+                f" {'frozen' if frz else 'unfrozen'} weights",
+                metric,
+                m_name,
+                rf=records,
+                maj_baseline=maj_bas_score,
+                frozen_dashed=False,
+                legend=not frz,
+            )
+
+    print("ok")
+
+
+def run_future():
     pd.set_option("display.max_rows", 500)
     pd.set_option("display.max_columns", 500)
     pd.set_option("display.width", 500)
@@ -206,28 +262,18 @@ def run():
         "test_ood_maj_vote_f1_macro_mapped",
         # "test_id_maj_vote_f1_macro_changed_mapped",
         # "test_ood_maj_vote_f1_macro_changed_mapped",
-        "test_id_maj_vote_f1_macro",
-        "test_ood_maj_vote_f1_macro",
-        # "test_id_maj_vote_f1_weighted",
-        # "test_ood_maj_vote_f1_weighted",
     ]
     rf_metrics = [
         "test_f1_macro_mapped",
         "ood_f1_macro_mapped",
         # "test_f1_macro_changed_mapped",
         # "ood_f1_macro_changed_mapped",
-        "test_f1_macro",
-        "ood_f1_macro",
-        # "test_f1_weighted",
-        # "ood_f1_weighted",
     ]
     rf_maj_baseline_metrics = [
         "test_maj_baseline_f1_macro",
         "ood_maj_baseline_f1_macro",
-        "test_maj_baseline_f1_macro",
-        "ood_maj_baseline_f1_macro",
-        "test_maj_baseline_f1_weighted",
-        "ood_maj_baseline_f1_weighted",
+        # "test_maj_baseline_f1_weighted",
+        # "ood_maj_baseline_f1_weighted",
     ]
     dset_names = 2 * ["Test", "OOD"]
     metric_names = [
@@ -235,47 +281,17 @@ def run():
         "Macro F1",
         "Macro F1",
         "Macro F1",
-        # "Macro F1 on changed zones",
-        # "Macro F1 on changed zones",
-        # "Weighted F1",
-        # "Weighted F1",
-        # "Accuracy",
-        # "Accuracy",
     ]
     rf_run_names = [
         "2023_09_20_23_49_21_random_forest_tempsep_changed_s42_bal",  # future
         "2023_09_20_23_49_21_random_forest_tempsep_changed_s42_bal",  # future
-        "2023_02_10_16_02_59_random_forest_s42_bal",  # decreasing data
-        "2023_02_10_16_02_59_random_forest_s42_bal",  # decreasing data
     ]
 
     for metric, rf_metric, rf_mb_metric, dset_name, m_name in zip(
         metrics, rf_metrics, rf_maj_baseline_metrics, dset_names, metric_names
     ):
-
         rf_df = df[df.name.str.contains(rf_run_names[-1])]
-        maj_bas_score, records = get_rf_data_df(
-            rf_df, rf_mb_metric, rf_metric, rf_run_names
-        )
-
-        # maj_bas_score = rf_df[rf_df["random_forest/n_steps_in_future"] == 0][
-        #     "test_maj_baseline_f1_macro"
-        # ].item()
-
-        fltrd_data_df = get_data_df(groupby_cols, metric, run_df)
-
-        for frz in (True, False):
-            data_plot(
-                fltrd_data_df[fltrd_data_df["finetune/freeze_backbone"] == frz],
-                groupby_cols,
-                f'Training set size vs {dset_name} {m_name} with {"frozen" if frz else "unfrozen"} weights',
-                metric,
-                m_name,
-                rf=records,
-                maj_baseline=maj_bas_score,
-                frozen_dashed=False,
-                legend=not frz,
-            )
+        maj_bas_score, records = get_rf_data_df(rf_df, rf_mb_metric, rf_metric, rf_run_names)
 
         fltrd_fut_df = get_fut_df(groupby_cols, metric, run_df)
         rf_fut_grps = get_rf_fut_grps(rf_df)
@@ -315,8 +331,7 @@ def get_rf_data_df(rf_df, rf_mb_metric, rf_metric, rf_run_names):
         rf_mb_metric
     ].iloc[0]
     rf_data_ms = [
-        "%s%s" % (rf_metric, f"_{perc}" if perc != 100 else "")
-        for perc in (100, 70, 50, 20, 5, 1)
+        "%s%s" % (rf_metric, f"_{perc}" if perc != 100 else "") for perc in (100, 70, 50, 20, 5, 1)
     ]
     records = rf_data_df[
         ["random_forest/run_name", "random_forest/class_weight"] + rf_data_ms
@@ -330,9 +345,7 @@ def get_fut_df(groupby_cols, metric, run_df):
         run_df["finetune/percentage_of_training_data"] == 100
     )
     fut_df = run_df[all_data_mask].copy()
-    fut_df.loc[
-        pd.isna(fut_df["finetune/n_steps_in_future"]), "finetune/n_steps_in_future"
-    ] = 0
+    fut_df.loc[pd.isna(fut_df["finetune/n_steps_in_future"]), "finetune/n_steps_in_future"] = 0
     temp_sep_mask = fut_df["finetune/temporally_separated"] == True
     best_mask = fut_df["finetune/all_backbone_ckpts_in_dir"].isin(["", None])
     best_fut_df = fut_df[best_mask & temp_sep_mask]
@@ -349,11 +362,10 @@ def get_fut_df(groupby_cols, metric, run_df):
 
 def get_data_df(groupby_cols, metric, run_df, downstr_splits=None):
     not_fut_mask = (
-        pd.isna(run_df["finetune/n_steps_in_future"])
-        | (run_df["finetune/n_steps_in_future"] == 0)
+        pd.isna(run_df["finetune/n_steps_in_future"]) | (run_df["finetune/n_steps_in_future"] == 0)
     ) & (
         pd.isna(run_df["finetune/temporally_separated"])
-        | (run_df["finetune/temporally_separated"] is False)
+        | (run_df["finetune/temporally_separated"] == False)
     )
     data_df = run_df[not_fut_mask].copy()
     if downstr_splits:
@@ -364,9 +376,7 @@ def get_data_df(groupby_cols, metric, run_df, downstr_splits=None):
     best_mask = data_df["finetune/all_backbone_ckpts_in_dir"].isin(["", None])
     best_data_df = data_df[best_mask]
     best_pt_frz_df = data_df[~best_mask].loc[
-        data_df[~best_mask]
-        .groupby(groupby_cols + ["seed"], dropna=False)[metric]
-        .idxmax()
+        data_df[~best_mask].groupby(groupby_cols + ["seed"], dropna=False)[metric].idxmax()
     ]
     best_data_df = pd.concat([best_data_df, best_pt_frz_df])
     # filter out doubles
@@ -388,7 +398,7 @@ def preprocess_df(df, filter_runs=True):
     m6 = pd.notna(df["test_id_maj_vote_f1_weighted"])
 
     min_date = datetime.strptime("2023-01-01", "%Y-%m-%d")  # todo adjust
-    m8 = pd.to_datetime(df["createdAt"], format="%Y-%m-%dT%H:%M:%S") > min_date
+    m8 = pd.to_datetime(df["createdAt"], format="ISO8601").dt.date > min_date.date()
     m12 = pd.isna(df["finetune/binarize_ipc"]) | (df["finetune/binarize_ipc"] == False)
     m14 = ~df.cfg_name.str.contains("_lr_")
     all_df = df.loc[m1 & m2 & m6 & m8 & m12 & m14].copy()
@@ -414,13 +424,12 @@ def preprocess_df(df, filter_runs=True):
             run_df["finetune/pretrained_on"].isin(["random", "ImageNet"])
             | (
                 (run_df["finetune/pretrained_on"] == "own")
-                & run_df["finetune/pretrained_ckpt_path"].apply(
-                    lambda x: any(r in x for r in RUNS)
-                )
+                & run_df["finetune/pretrained_ckpt_path"].apply(lambda x: any(r in x for r in RUNS))
             )
         ]
     return run_df
 
 
 if __name__ == "__main__":
-    run()
+    run_data()
+    run_future()

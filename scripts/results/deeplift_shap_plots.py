@@ -79,9 +79,7 @@ def image_plot(
         # feature_names = [shap_exp.feature_names]
         # ind = 0
         if len(shap_exp.output_dims) == 1:
-            shap_values = [
-                shap_exp.values[..., i] for i in range(shap_exp.values.shape[-1])
-            ]
+            shap_values = [shap_exp.values[..., i] for i in range(shap_exp.values.shape[-1])]
         elif len(shap_exp.output_dims) == 0:
             shap_values = shap_exp.values
         else:
@@ -114,9 +112,7 @@ def image_plot(
     fig_size = np.array([3 * (len(shap_values) + 1), 2.5 * (x.shape[0] + 1)])
     if fig_size[0] > width:
         fig_size *= width / fig_size[0]
-    fig, axes = plt.subplots(
-        nrows=x.shape[0] + 1, ncols=len(shap_values) + 1, figsize=fig_size
-    )
+    fig, axes = plt.subplots(nrows=x.shape[0] + 1, ncols=len(shap_values) + 1, figsize=fig_size)
     if len(axes.shape) == 1:
         axes = axes.reshape(1, axes.size)
     for row in range(x.shape[0]):
@@ -129,22 +125,18 @@ def image_plot(
         # get a grayscale version of the image
         if len(x_curr.shape) == 3 and x_curr.shape[2] == 3:
             x_curr_gray = (
-                0.2989 * x_curr[:, :, 0]
-                + 0.5870 * x_curr[:, :, 1]
-                + 0.1140 * x_curr[:, :, 2]
+                0.2989 * x_curr[:, :, 0] + 0.5870 * x_curr[:, :, 1] + 0.1140 * x_curr[:, :, 2]
             )  # rgb to gray
             x_curr_disp = x_curr
         elif len(x_curr.shape) == 3:
             x_curr_gray = x_curr.mean(2)
 
             # for non-RGB multi-channel data we show an RGB image where each of the three channels is a scaled k-mean center
-            flat_vals = x_curr.reshape(
-                [x_curr.shape[0] * x_curr.shape[1], x_curr.shape[2]]
-            ).T
+            flat_vals = x_curr.reshape([x_curr.shape[0] * x_curr.shape[1], x_curr.shape[2]]).T
             flat_vals = (flat_vals.T - flat_vals.mean(1)).T
-            means = kmeans(flat_vals, 3, round_values=False).data.T.reshape(
-                [x_curr.shape[0], x_curr.shape[1], 3]
-            )
+            means = kmeans(flat_vals, 3, round_values=False).data.T.reshape([
+                x_curr.shape[0], x_curr.shape[1], 3
+            ])
             x_curr_disp = (means - np.percentile(means, 0.5, (0, 1))) / (
                 np.percentile(means, 99.5, (0, 1)) - np.percentile(means, 1, (0, 1))
             )
@@ -241,16 +233,12 @@ if __name__ == "__main__":
     background_samples = []
     samples = []
     samples_per_ipc = [
-        len(
-            [
-                pathlist[d]
-                for (z, d) in train_ipc_ds.ipc_2_zd[ipc]
-                for pathlist in train_ipc_ds.f.zone2box2p[
-                    train_ipc_ds.f.all_admins[z]
-                ].values()
-                if len(pathlist) > d
-            ]
-        )
+        len([
+            pathlist[d]
+            for (z, d) in train_ipc_ds.ipc_2_zd[ipc]
+            for pathlist in train_ipc_ds.f.zone2box2p[train_ipc_ds.f.all_admins[z]].values()
+            if len(pathlist) > d
+        ])
         for ipc in [0, 1, 2, 3]
     ]
     bg_samples_per_ipc = min(num_bg_samples, *samples_per_ipc)
@@ -258,9 +246,7 @@ if __name__ == "__main__":
         background_samples += itertools.islice(
             train_ipc_ds.sample_from_ipc_class(ipc, shuffle=True), bg_samples_per_ipc
         )
-        samples += itertools.islice(
-            ipc_ds.sample_from_ipc_class(ipc, shuffle=True), num_samples
-        )
+        samples += itertools.islice(ipc_ds.sample_from_ipc_class(ipc, shuffle=True), num_samples)
 
     bg_batch = ipc_ds.collate(background_samples)
     batch = ipc_ds.collate(samples)
@@ -272,7 +258,8 @@ if __name__ == "__main__":
     model = model.to("cuda:0")
 
     e = shap.DeepExplainer(model, bg_tiles)
-    shap_values = e.shap_values(tiles)
+    # shap_values = e.shap_values(tiles)
+    shap_values = e.shap_values(tiles, check_additivity=False)
     p = "output/2023_09_25_22_31_00_shap_values/shap_values.npy"
     pathlib.Path(p).parent.mkdir(parents=True, exist_ok=True)
     np.save(p, shap_values)
@@ -281,15 +268,29 @@ if __name__ == "__main__":
     print("Computed and saved shap values")
 
     shap_values = np.array(shap_values)
+    # shap_per_band = (
+    #     shap_values.reshape(*shap_values.shape[:-2], -1)
+    #     .mean(axis=-1)
+    #     .mean(axis=1)[:, 0]
+    # )
+    # shap_per_band_abs = (
+    #     np.absolute(shap_values.reshape(*shap_values.shape[:-2], -1))
+    #     .mean(axis=-1)
+    #     .mean(axis=1)[:, 0]
+    # )
     shap_per_band = (
-        shap_values.reshape(*shap_values.shape[:-2], -1)
-        .mean(axis=-1)
-        .mean(axis=1)[:, 0]
+        shap_values[:, 0]
+        .transpose(4, 1, 0, 2, 3)
+        .reshape(4, 7, shap_values.shape[0], -1)
+        .mean(-2)
+        .mean(-1)
     )
     shap_per_band_abs = (
-        np.absolute(shap_values.reshape(*shap_values.shape[:-2], -1))
-        .mean(axis=-1)
-        .mean(axis=1)[:, 0]
+        np.absolute(shap_values[:, 0])
+        .transpose(4, 1, 0, 2, 3)
+        .reshape(4, 7, shap_values.shape[0], -1)
+        .mean(-2)
+        .mean(-1)
     )
 
     plt.close("all")
@@ -305,9 +306,7 @@ if __name__ == "__main__":
     plt.ylabel("SHAP", fontsize=12)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
-    plt.legend(
-        title="Pred. IPC Score", fontsize=12, bbox_to_anchor=(1.04, 1), loc="upper left"
-    )
+    plt.legend(title="Pred. IPC Score", fontsize=12, bbox_to_anchor=(1.04, 1), loc="upper left")
     plt.tight_layout()
     plt.savefig(f"imgs/shap50_mean_{seed}_{num_bg_samples}.pdf")
     plt.show()
@@ -333,9 +332,7 @@ if __name__ == "__main__":
     plt.close("all")
     fig, axs = plt.subplots(4, 1, sharex=True, sharey=True, figsize=(7, 9))
     shap_per_band_per_ipc = (
-        shap_values.reshape(4, 4, num_samples, 1, 7, -1)
-        .mean(axis=-1)
-        .mean(axis=2)[:, :, 0]
+        shap_values.reshape(4, 4, num_samples, 1, 7, -1).mean(axis=-1).mean(axis=2)[:, :, 0]
     )
     for ipc, ax in zip([0, 1, 2, 3], axs):
         df = pd.DataFrame(
@@ -418,13 +415,10 @@ if __name__ == "__main__":
                 for s in shap_values
             ]
             # take the first 3 images, skip the singleton dimension, swap channel dim to last, take RGB
-            img_to_plot = np.swapaxes(tiles.cpu()[first_per_class + i, 0], 1, 3)[
-                :, :, :, bands
-            ]
+            img_to_plot = np.swapaxes(tiles.cpu()[first_per_class + i, 0], 1, 3)[:, :, :, bands]
             # un-normalize:
             un_img = (
-                np.nan_to_num(img_to_plot, nan=0.0)
-                * utils.Constants.CHANNEL_STDS[bands].numpy()
+                np.nan_to_num(img_to_plot, nan=0.0) * utils.Constants.CHANNEL_STDS[bands].numpy()
                 + utils.Constants.CHANNEL_MEANS[bands].numpy()
             )
             plt.close("all")
@@ -440,9 +434,7 @@ if __name__ == "__main__":
             )
             plt.suptitle(f"SHAP values for example images", fontsize=22)
             plt.tight_layout()
-            plt.savefig(
-                f"imgs/shap50_examples_{i}_{seed}_{num_bg_samples}_{band_names}.pdf"
-            )
+            plt.savefig(f"imgs/shap50_examples_{i}_{seed}_{num_bg_samples}_{band_names}.pdf")
             plt.show()
 
     print("ok")

@@ -49,17 +49,15 @@ class IPCBatch:
         _, h, w = shapes.max(axis=0)
 
         # bs x ch x h x w
-        self.tiles = np.stack(
-            [
-                np.pad(
-                    a.array,
-                    ((0, 0), (0, h - a.array.shape[1]), (0, w - a.array.shape[2])),
-                    mode="constant",
-                    constant_values=0.0,
-                )
-                for a in tiles
-            ]
-        )
+        self.tiles = np.stack([
+            np.pad(
+                a.array,
+                ((0, 0), (0, h - a.array.shape[1]), (0, w - a.array.shape[2])),
+                mode="constant",
+                constant_values=0.0,
+            )
+            for a in tiles
+        ])
         self.tiles = np.expand_dims(self.tiles, axis=1)
         if to_pt:
             self.tiles = torch.from_numpy(self.tiles)
@@ -109,9 +107,7 @@ class IPCLandsat8Files(Landsat8Files):
             with open(os.path.join(cfg.indices_dir, cfg.path_to_h5_virtual_idx)) as f:
                 self.h5_idx = json.load(f)
 
-    def zones_4_split(
-        self, split: str, split_dict: Dict, temporally_separated: bool
-    ) -> List[str]:
+    def zones_4_split(self, split: str, split_dict: Dict, temporally_separated: bool) -> List[str]:
         if temporally_separated:
             return (
                 split_dict["ood_regions"]
@@ -134,9 +130,7 @@ class IPCLandsat8Files(Landsat8Files):
 class IPCScoreDataset(Landsat8Dataset):
     def __init__(self, cfg: Config, split: str = "train"):
         super().__init__(cfg, split=split)
-        self.f: IPCLandsat8Files = IPCLandsat8Files(
-            cfg, split, cfg.finetune.temporally_separated
-        )
+        self.f: IPCLandsat8Files = IPCLandsat8Files(cfg, split, cfg.finetune.temporally_separated)
         # so workers initialize correct h5 dataset
         self.h5_split_name = "downstream"
 
@@ -152,30 +146,25 @@ class IPCScoreDataset(Landsat8Dataset):
             self.df.fews_ipc = utils.binarize_ipcs(self.df.fews_ipc)
         all_ipcs = self.df.fews_ipc.unique()
         all_ipcs.sort()
-        self.f.all_ipcs = all_ipcs.astype(np.int32)
+        self.f.all_ipcs = all_ipcs.astype(int)
         self.f.ipc_dict = {ipc: i for (i, ipc) in enumerate(self.f.all_ipcs)}
 
         self.regions = self.f.regions
         self.zone_ids = [self.f.admin_dict[z] for z in self.regions]
 
         logger.info("Filtering downstream boxes for %s" % split)
-        self.boxes = [
-            b for z in tqdm(self.regions) for b in self.f.zone2box2p[z].keys()
-        ]
+        self.boxes = [b for z in tqdm(self.regions) for b in self.f.zone2box2p[z].keys()]
         fut = cfg.finetune.n_steps_in_future
         self.temp_sep = cfg.finetune.temporally_separated
         if self.temp_sep:
             date_idcs_dict = {
-                "train": list(
-                    range(min(3 - fut, 2), len(self.f.all_end_dates) - max(fut + 1, 2))
-                ),
+                "train": list(range(min(3 - fut, 2), len(self.f.all_end_dates) - max(fut + 1, 2))),
                 "val": [len(self.f.all_end_dates) - max(fut + 1, 2)],
                 "test": [len(self.f.all_end_dates) - max(fut, 1)],
                 "ood": [len(self.f.all_end_dates) - max(fut, 1)],
             }
             date_dict = {
-                sp: [self.f.all_end_dates[di] for di in idcs]
-                for sp, idcs in date_idcs_dict.items()
+                sp: [self.f.all_end_dates[di] for di in idcs] for sp, idcs in date_idcs_dict.items()
             }
 
         logger.info("Filtering downstream paths for %s" % split)
@@ -184,9 +173,7 @@ class IPCScoreDataset(Landsat8Dataset):
             for z in tqdm(self.regions)
             for plist in self.f.zone2box2p[z].values()
             for p in (
-                utils.filter_paths_by_date(plist, date_dict[split])
-                if self.temp_sep
-                else plist
+                utils.filter_paths_by_date(plist, date_dict[split]) if self.temp_sep else plist
             )
         ]
         logger.info(
@@ -226,7 +213,7 @@ class IPCScoreDataset(Landsat8Dataset):
             )
         ]
         self.ipc_2_zd = defaultdict(list)
-        for (z, d, ipc) in self.zone_time_combos:
+        for z, d, ipc in self.zone_time_combos:
             self.ipc_2_zd[ipc].append((z, d))
 
         self.log_ipc_distributions()
@@ -235,7 +222,7 @@ class IPCScoreDataset(Landsat8Dataset):
     def log_ipc_distributions(self):
         per_date = {}
         per_zone = {}
-        for (z, d, ipc) in self.zone_time_combos:
+        for z, d, ipc in self.zone_time_combos:
             per_date.setdefault(d, []).append(ipc)
             per_zone.setdefault(z, []).append(ipc)
         per_date = {
@@ -246,9 +233,9 @@ class IPCScoreDataset(Landsat8Dataset):
             self.f.all_admins[z]: np.bincount(ipcs, minlength=4) / len(ipcs)
             for z, ipcs in per_zone.items()
         }
-        overall = np.bincount(
-            [ipc for (z, d, ipc) in self.zone_time_combos], minlength=4
-        ) / len(self.zone_time_combos)
+        overall = np.bincount([ipc for (z, d, ipc) in self.zone_time_combos], minlength=4) / len(
+            self.zone_time_combos
+        )
         logger.info("IPC distribution overall: %s" % pprint.pformat(overall))
         logger.info("IPC distribution per date: \n%s" % pprint.pformat(per_date))
         logger.info("IPC distribution per zone: \n%s" % pprint.pformat(per_zone))
@@ -283,7 +270,7 @@ class IPCScoreDataset(Landsat8Dataset):
 
     def sample_from_ipc_class(self, ipc: int, shuffle=False) -> Sample:
         paths = []
-        for (z, d) in (
+        for z, d in (
             random.sample(self.ipc_2_zd[ipc], k=len(self.ipc_2_zd[ipc]))
             if shuffle
             else self.ipc_2_zd[ipc]
