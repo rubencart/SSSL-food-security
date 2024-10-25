@@ -22,9 +22,7 @@ class FinetuneConfig(Tap):
     lr: float = 1e-4
     backbone_lr: float = 1e-5
     optimizer: str = "adam"
-    lr_schedule: Literal[
-        "linear_with_warmup", "reduce_on_plateau"
-    ] = "reduce_on_plateau"  # or None
+    lr_schedule: Literal["linear_with_warmup", "reduce_on_plateau"] = "reduce_on_plateau"  # or None
     lr_schedule_warmup_epochs: int = 0
     lr_schedule_monitor: str = "val_maj_vote_f1_macro"
     lr_schedule_mode: str = "max"
@@ -51,7 +49,7 @@ class FinetuneConfig(Tap):
     percentage_of_training_data: Literal[100, 70, 50, 20, 5, 1] = 100
     binarize_ipc: bool = False
     n_steps_in_future: int = 0
-    temporally_separated: bool = True
+    temporally_separated: bool = False
 
 
 class PretrainConfig(Tap):
@@ -59,9 +57,9 @@ class PretrainConfig(Tap):
 
     lr: float = 1e-4
     optimizer: str = "adam"
-    lr_schedule: Literal[
-        "linear_with_warmup", "reduce_on_plateau"
-    ] = None  # 'reduce_on_plateau'  # or None
+    lr_schedule: Literal["linear_with_warmup", "reduce_on_plateau"] = (
+        None  # 'reduce_on_plateau'  # or None
+    )
     lr_schedule_warmup_epochs: int = 0
     lr_schedule_monitor: str = "val_loss"
     lr_schedule_mode: str = "min"
@@ -141,9 +139,7 @@ class Config(Tap):
     downstr_splits_path: str = "downstr_splits_incl_small.json"
     valtest_wo_neighbors: str = "to_exclude.json"
     fixed_random_order_path: str = "fixed_random_order.json"
-    ipc_scores_csv_path: str = (
-        "data/predicting_food_crises_data_somalia_from2013-05-01.csv"
-    )
+    ipc_scores_csv_path: str = "data/predicting_food_crises_data_somalia_from2013-05-01.csv"
     future_ipc_shp: List[str] = [
         "data/SO_202006/SO_202006_CS.shp",
         "data/SO_202010/SO_202010_CS.shp",
@@ -217,14 +213,9 @@ class Config(Tap):
             self.process()
 
     def process(self):
-        self.feature_size = (
-            1000 if "resnet" in self.cnn_type else self.conv4_feature_size
-        )
+        self.feature_size = 1000 if "resnet" in self.cnn_type else self.conv4_feature_size
 
-        if (
-            self.pretrain.loss_type == "sssl"
-            and self.pretrain.augmentations == "rel_reasoning"
-        ):
+        if self.pretrain.loss_type == "sssl" and self.pretrain.augmentations == "rel_reasoning":
             logger.info("Disabling pin_memory for rel_reasoning augmentations...")
             self.pin_memory = False
 
@@ -238,7 +229,7 @@ class Config(Tap):
         dct.update({"tile2vec": self.tile2vec.as_dict()})
         dct.update({"pretrain": self.pretrain.as_dict()})
         return {
-            k: (v if not isinstance(v, List) else str(v))
+            k: v if not isinstance(v, List) else str(v)
             for (k, v) in dct.items()
             if not isinstance(v, MethodType)
         }
