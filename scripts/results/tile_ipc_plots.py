@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 def plot_tiles_per_ipc():
     for ipc, zds in tqdm(ipc_ds.ipc_2_zd.items()):
-        for (z, d) in tqdm(random.sample(zds, k=len(zds))[:5]):
+        for z, d in tqdm(random.sample(zds, k=len(zds))[:5]):
             box_dict: Dict[str, List[str]] = ipc_ds.f.zone2box2p[ipc_ds.f.all_admins[z]]
             box_list = random.sample(list(box_dict.values()), k=len(box_dict))[:2]
             paths: List[str] = [pathlist[d] for pathlist in box_list]
@@ -28,9 +28,7 @@ def plot_tiles_per_ipc():
                 p_cor = Path(cfg.tiles_dir) / p
                 ds = rio.open(p_cor)
                 # 1.3 * un_img ** (1 / 1.6)
-                array = ((np.nan_to_num(ds.read()) ** (1 / 1.6)) * 1.3 * 256).astype(
-                    np.uint8
-                )
+                array = ((np.nan_to_num(ds.read()) ** (1 / 1.6)) * 1.3 * 256).astype(np.uint8)
                 bounds = ds.bounds
                 plt.close()
                 plt.imshow(array[utils.Constants.RGB_BANDS].transpose(1, 2, 0))
@@ -56,35 +54,32 @@ if __name__ == "__main__":
     df = pd.read_csv("data/predicting_food_crises_data.csv")
 
     col = df["year_month"].apply(
-        lambda x: (
-            datetime.datetime.strptime(x, "%Y_%m") + relativedelta(months=1)
-        ).strftime("%Y-%m-%d")
+        lambda x: (datetime.datetime.strptime(x, "%Y_%m") + relativedelta(months=1)).strftime(
+            "%Y-%m-%d"
+        )
     )
     df = df.assign(ymd=col.values)
 
-    plot_tiles_per_ipc()
+    # plot_tiles_per_ipc()
 
     import seaborn as sns
 
     colors = sns.color_palette("rocket", 5)
     df.loc[df["country"] == "Democratic Republic of Congo", "country"] = "DR of Congo"
 
-    lfs = 15
+    lfs = 17
     plt.close()
     df[df["ymd"] >= "2013-08-01"].groupby(["country"])["fews_ipc"].value_counts(
         normalize=True
     ).unstack().plot(
-        kind="bar", stacked=True, cmap=cmap, figsize=(9, 6), color=colors, fontsize=lfs
+        kind="bar", stacked=True, cmap=cmap, figsize=(10, 6), color=colors, fontsize=lfs
     )
     for col, lab in zip(colors, [1, 2, 3, 4, 5]):
         plt.axvspan(0, 0, fc=col, label=lab)
-    plt.legend(
-        [1, 2, 3, 4, 5],
-        title="IPC",
-        # bbox_to_anchor=(1.02, 1),
-        loc="lower center",
-        fontsize=lfs,
-    )
+    legend = plt.legend([1, 2, 3, 4, 5], title="IPC", bbox_to_anchor=(1.02, 1), fontsize=lfs)
+    legend.get_title().set_fontsize(lfs)
+    plt.yticks(fontsize=lfs - 1)
+    plt.xticks(fontsize=lfs + 1)
     plt.xlabel("Country", fontsize=lfs)
     plt.ylabel("Frequency", fontsize=lfs)
     plt.title("IPC distribution 2013-2020", fontsize=lfs + 1)
@@ -95,17 +90,14 @@ if __name__ == "__main__":
 
     plt.close()
     df.groupby(["country"])["fews_ipc"].value_counts(normalize=True).unstack().plot(
-        kind="bar", stacked=True, cmap=cmap, figsize=(9, 6), color=colors, fontsize=lfs
+        kind="bar", stacked=True, cmap=cmap, figsize=(10, 6), color=colors, fontsize=lfs
     )
     for col, lab in zip(colors, [1, 2, 3, 4, 5]):
         plt.axvspan(0, 0, fc=col, label=lab)
-    plt.legend(
-        [1, 2, 3, 4, 5],
-        title="IPC",
-        # bbox_to_anchor=(1.02, 1),
-        loc="lower center",
-        fontsize=lfs,
-    )
+    legend = plt.legend([1, 2, 3, 4, 5], title="IPC", bbox_to_anchor=(1.02, 1), fontsize=lfs)
+    legend.get_title().set_fontsize(lfs)
+    plt.yticks(fontsize=lfs - 1)
+    plt.xticks(fontsize=lfs + 1)
     plt.xlabel("Country", fontsize=lfs)
     plt.ylabel("Frequency", fontsize=lfs)
     plt.title("IPC distribution 2009-2020", fontsize=lfs + 1)
@@ -121,15 +113,19 @@ if __name__ == "__main__":
         kind="bar",
         stacked=True,
         cmap=cmap,
-        figsize=(5, 6),
+        figsize=(7, 6),
         color=colors,
         fontsize=lfs,
-        legend=False,
     )
     for col, lab in zip(colors, [1, 2, 3, 4, 5]):
         plt.axvspan(0, 0, fc=col, label=lab)
+    plt.yticks(fontsize=lfs - 1)
+    plt.xticks(fontsize=lfs + 1)
     plt.xlabel("Year", fontsize=lfs)
+    plt.ylabel("Frequency", fontsize=lfs)
     plt.title("IPC distribution Somalia 2009-2020", fontsize=lfs + 1)
+    legend = plt.legend([1, 2, 3, 4, 5], title="IPC", bbox_to_anchor=(1.02, 1), fontsize=lfs)
+    legend.get_title().set_fontsize(lfs)
     plt.tight_layout()
     plt.savefig(f"imgs/ipc_distrib_somalia_2009_2.pdf")
     plt.show()
@@ -142,15 +138,19 @@ if __name__ == "__main__":
         kind="bar",
         stacked=True,
         cmap=cmap,
-        figsize=(5, 6),
+        figsize=(7, 6),
         color=colors,
         fontsize=lfs,
-        legend=False,
     )
     for col, lab in zip(colors, [1, 2, 3, 4, 5]):
         plt.axvspan(0, 0, fc=col, label=lab)
+    plt.yticks(fontsize=lfs - 1)
+    plt.xticks(fontsize=lfs + 1)
     plt.xlabel("Year", fontsize=lfs)
+    plt.ylabel("Frequency", fontsize=lfs)
     plt.title("IPC distribution Somalia 2013-2020", fontsize=lfs + 1)
+    legend = plt.legend([1, 2, 3, 4], title="IPC", bbox_to_anchor=(1.02, 1), fontsize=lfs)
+    legend.get_title().set_fontsize(lfs)
     plt.tight_layout()
     plt.savefig(f"imgs/ipc_distrib_somalia_2013_2.pdf")
     plt.show()
