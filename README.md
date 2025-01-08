@@ -80,8 +80,8 @@ If running on different country/region/timeframe than Somalia 2013-2020:
 - Run `scripts/preprocess/ipc_class_weights.py` to recompute relative weights of IPC classes 
 if using different data than Somalia 2013-2020 and update in `utils.Constants`
 
-Tiles:
-- Export data from GEE with code in `scripts/earth_engine/js/export_somalia.js` (or contact me to find a way to transfer our data)
+Data (manual):
+- Export data from GEE with code in `scripts/earth_engine/js/export_somalia.js`
 - Download from google cloud to local server
 - Run `scripts/preprocess/build_indices.py`. The indices (and output of the next 2 steps)
 used for results in the publication are included in `data/indices.zip`. You can
@@ -92,27 +92,57 @@ the same positives.
 - Run `scripts/preprocess/make_h5.py` (optional but much faster), use `cfg.use_h5 = True` in subsequent runs
 - Run `scripts/preprocess/channel_mean_std.py` if using different data than Somalia Landsat8 2013-2020, update means/stds in `utils.Constants`
 
+Data (download ours)
+- Download all `.xz` files from https://huggingface.co/datasets/rubencart/Landsat-8-Somalia-2013-2020, and follow the steps under "Data from Huggingface" below.
+- Unzip the `data/indices.zip` file.
+
 Config files:
 - Run `config/generate_pretrain_configs.py` to generate pretrain run config files, to run with `python code/pretrain.py --cfg config/pretrain/<config>.yaml`
 - Run `config/generate_downstr_configs.py` to generate downstream IPC run config files, to run with `python code/finetune.py --cfg config/ipc/<config>.yaml`
 - Run `config/generate_comb_configs.py` to generate pretrain run config files, to run with `python code/pretrain_then_finetune.py --cfg config/pretrain_ipc/<config>.yaml`
 
 
+### Data from Huggingface
+
+```bash
+# download
+git lfs install
+# (make sure you have a huggingface hub account and your ssh key is uploaded
+git clone git@hf.co:datasets/rubencart/Landsat-8-Somalia-2013-2020
+cd Landsat-8-Somalia-2013-2020
+# decompress
+for f in ./tiles_v2.h5.*.xz; do echo "${f}"; unxz -vf -T 4 "$f"; done
+# merge
+cat tiles_v2.h5.* > tiles_v2.h5
+# remove partial files
+rm tiles_v2.h5.*
+```
+Just for reference, this is how the `.xz` files were made, after having exported the tiles from GEE
+and after having run `scripts/preprocess/make_h5.py`.
+The `h5` already compresses the images, but we nevertheless compress the parts again, because the 
+Huggingface data hub only accepts certain file formats. 
+```bash
+# split
+split -b 1024m tiles_v2.h5 tiles_v2.h5.
+# compress
+for f in ./tiles_v2.h5.*; do echo "${f}"; xz -e9vfk -T 32 "$f"; done
+```
+
 ## Run
 
 Pretrain:
 ```
-CUDA_VISIBLE_DEVICES=0 python code/pretrain.py --cfg config/pretrain/debug.yaml
+CUDA_VISIBLE_DEVICES=0 python pretrain.py --cfg config/pretrain/debug.yaml
 ```
 
 Finetune:
 ```
-CUDA_VISIBLE_DEVICES=0 python code/finetune.py --cfg config/ipc/debug.yaml
+CUDA_VISIBLE_DEVICES=0 python finetune.py --cfg config/ipc/debug.yaml
 ```
 
 Pretrain then finetune:
 ```
-CUDA_VISIBLE_DEVICES=0 python code/pretrain_then_finetune.py --cfg config/pretrain_ipc/debug.yaml --seed 41
+CUDA_VISIBLE_DEVICES=0 python pretrain_then_finetune.py --cfg config/pretrain_ipc/debug.yaml --seed 41
 ```
 
 ### Checkpoints
