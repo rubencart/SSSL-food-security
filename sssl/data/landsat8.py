@@ -277,7 +277,7 @@ class Landsat8Files:
             return PretrainLandsat8Files(cfg, split)
         else:
             assert cfg.do_downstream
-            from data.ipc import IPCLandsat8Files
+            from sssl.data.ipc import IPCLandsat8Files
 
             return IPCLandsat8Files(cfg, split)
 
@@ -320,7 +320,6 @@ class PretrainLandsat8Files(Landsat8Files):
                 os.path.join(cfg.indices_dir, cfg.valtest_wo_neighbors), "r"
             ) as f:
                 self.valtest_wo_neighbors = json.load(f)
-                self.skip_paths = self.valtest_wo_neighbors["paths"]
                 self.skip_boxes = self.valtest_wo_neighbors["boxes"]
 
         self.pseudo_random_boxes = None
@@ -358,19 +357,19 @@ class Landsat8Dataset(Dataset, ABC):
 
     def tile_from_path(self, path: str, lldz=None) -> Tile:
         if lldz is None:
-            lat, lon, end_date, zone = self.lat_lon_date_zone_from_path(path)
+            lat, lon, end_date, zone = self.lat_lon_date_zone_from_path(Path(path).name)
         else:
             lat, lon, end_date, zone = lldz
         if self.cfg.use_h5:
             if self.f.h5_ds is None:
                 logger.debug("Initializing h5")
                 self.f.init_h5(self.h5_split_name)
-            h5_i = self.f.h5_idx[path.replace(self.cfg.tiles_dir, "")]
+            h5_i = self.f.h5_idx[Path(path).name]
             arr = self.f.h5_ds[h5_i]
         else:
             arr = None
         return Tile(
-            path,
+            Path(path).name,
             self.cfg.tiles_dir,
             lat,
             lon,
@@ -382,7 +381,7 @@ class Landsat8Dataset(Dataset, ABC):
         )
 
     def lat_lon_date_zone_from_path(self, path: str) -> Tuple[int, int, int, int]:
-        zone, (lon, _, _, lat) = self.f.path2zb[path]
+        zone, (lon, _, _, lat) = self.f.path2zb[Path(path).name]
         end_date = utils.path_to_end_date(path, ftstr=True)
         return (
             self.f.lat_dict[str(lat)],
@@ -392,7 +391,7 @@ class Landsat8Dataset(Dataset, ABC):
         )
 
     def zone_from_path(self, path):
-        zone = self.f.path2zb[path][0]
+        zone = self.f.path2zb[Path(path).name][0]
         return self.f.admin_dict[zone]
 
     def __del__(self):
@@ -430,7 +429,7 @@ class ContrastiveDataset(Landsat8Dataset, ABC):
             self.f.paths = [
                 p
                 for p in tqdm(self.f.paths)
-                if utils.box_to_str(self.f.path2zb[p][1]) not in self.f.skip_boxes
+                if utils.box_to_str(self.f.path2zb[Path(p).name][1]) not in self.f.skip_boxes
             ]
         logger.info(
             "Using %s boxes, %s paths, %s regions for %s"

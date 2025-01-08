@@ -131,7 +131,6 @@ class Config(Tap):
     box2pz: str = "box_2_tilepath_adminzone.json"
     oor_tiles: str = "out_of_region_tiles.json"
     dicts_path: str = "dicts.json"
-    maps_path: str = "maps.json"
     ood_splits_path: str = "ood_splits.json"
     val_splits_path: str = "val_splits.json"
     test_splits_path: str = "test_splits.json"
